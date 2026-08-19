@@ -1,6 +1,6 @@
 import { isNotNumber } from "./utils.ts";
 
-const calculateBmi = (height: number, weight: number) => {
+export const calculateBmi = (height: number, weight: number) => {
   const heightInMeter = height / 100;
   const bmi = weight / (heightInMeter * heightInMeter);
 
