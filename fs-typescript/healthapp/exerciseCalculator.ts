@@ -10,7 +10,10 @@ interface Result {
   average: number;
 }
 
-const calculateExercises = (dailyHours: number[], target: number): Result => {
+export const calculateExercises = (
+  dailyHours: number[],
+  target: number,
+): Result => {
   // calculates the number of measured days
   //the number of days
   const periodLength = dailyHours.length;
