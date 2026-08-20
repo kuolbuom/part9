@@ -36,7 +36,7 @@ const calculateExercises = (dailyHours: number[], target: number): Result => {
 
   if (average < target * 0.75) {
     rating = 1;
-    ratingDescription = "You need to exercise more";
+    ratingDescription = "bad";
   } else if (average < target) {
     rating = 2;
     ratingDescription = "Not too bad but could be better";
