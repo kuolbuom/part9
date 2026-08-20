@@ -45,24 +45,24 @@ app.get("/bmi", (req, res) => {
 //req = request — contains data sent by the client.
 //res = response — used to send data back to the client.
 app.post("/exercises", (req, res) => {
-  const { dailyHours, target } = req.body;
+  const { daily_exercises, target } = req.body;
 
   // Check if parameters exist
-  if (!dailyHours || target === undefined) {
+  if (!daily_exercises || target === undefined) {
     return res.status(400).json({
       error: "parameters missing",
     });
   }
 
   // Check that dailyHours is an array
-  if (!Array.isArray(dailyHours)) {
+  if (!Array.isArray(daily_exercises)) {
     return res.status(400).json({
       error: "malformatted parameters",
     });
   }
 
   const targetNumber = Number(target);
-  const dailyHoursNumbers = dailyHours.map(Number);
+  const dailyHoursNumbers = daily_exercises.map(Number);
 
   // Check that all values are numbers
   if (isNaN(targetNumber) || dailyHoursNumbers.some((hour) => isNaN(hour))) {
