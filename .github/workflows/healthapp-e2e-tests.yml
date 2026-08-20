@@ -54,7 +54,7 @@ jobs:
 
       - name: Stop healthapp server
         if: always()
-        working-directory: ./healthapp
+        working-directory: ./fs-typescript/healthapp
         run: |
           if [ -f server.pid ]; then
             kill $(cat server.pid) || true
