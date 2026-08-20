@@ -1,8 +1,11 @@
 import express from "express";
 
 import { calculateBmi } from "./bmiCalculator.ts";
+import { calculateExercises } from "./exerciseCalculator.ts";
 
 const app = express();
+
+app.use(express.json());
 
 app.get("/hello", (_req, res) => {
   res.send("Hello Full Stack!");
@@ -37,7 +40,43 @@ app.get("/bmi", (req, res) => {
     bmi,
   });
 });
-const PORT = 3003;
+
+//exercises calculator endpoint
+//req = request — contains data sent by the client.
+//res = response — used to send data back to the client.
+app.post("/exercises", (req, res) => {
+  const { dailyHours, target } = req.body;
+
+  // Check if parameters exist
+  if (!dailyHours || target === undefined) {
+    return res.status(400).json({
+      error: "parameters missing",
+    });
+  }
+
+  // Check that dailyHours is an array
+  if (!Array.isArray(dailyHours)) {
+    return res.status(400).json({
+      error: "malformatted parameters",
+    });
+  }
+
+  const targetNumber = Number(target);
+  const dailyHoursNumbers = dailyHours.map(Number);
+
+  // Check that all values are numbers
+  if (isNaN(targetNumber) || dailyHoursNumbers.some((hour) => isNaN(hour))) {
+    return res.status(400).json({
+      error: "malformatted parameters",
+    });
+  }
+
+  const result = calculateExercises(dailyHoursNumbers, targetNumber);
+
+  return res.json(result);
+});
+
+const PORT = 3000;
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
