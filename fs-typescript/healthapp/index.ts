@@ -45,6 +45,7 @@ app.get("/bmi", (req, res) => {
 //req = request — contains data sent by the client.
 //res = response — used to send data back to the client.
 app.post("/exercises", (req, res) => {
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
   const { daily_exercises, target } = req.body;
 
   // Check if parameters exist
