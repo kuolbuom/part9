@@ -11,6 +11,9 @@ export const Gender = {
   Other: "other",
 } as const;
 
+//Then create the Gender type:
+// export type Gender = (typeof Gender)[keyof typeof Gender];
+
 export interface Patient {
   id: string;
   name: string;
