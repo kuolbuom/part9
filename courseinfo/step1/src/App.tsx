@@ -1,3 +1,8 @@
+interface CoursePart {
+  name: string;
+  exerciseCount: number;
+}
+
 //type declarations for Header
 interface HeaderProps {
   name: string;
@@ -10,10 +15,7 @@ const Header = (props: HeaderProps) => {
 
 //type declarations for Content
 interface ContentProps {
-  courseParts: {
-    name: string;
-    exerciseCount: number;
-  }[];
+  courseParts: CoursePart[];
 }
 
 //Content component that takes in props of type ContentProps and returns a JSX element
@@ -36,10 +38,7 @@ const Content = (props: ContentProps) => {
 
 //type declarations for Total
 interface TotalProps {
-  courseParts: {
-    name: string;
-    exerciseCount: number;
-  }[];
+  courseParts: CoursePart[];
 }
 
 //Total component that takes in props of type TotalProps and returns a JSX element
