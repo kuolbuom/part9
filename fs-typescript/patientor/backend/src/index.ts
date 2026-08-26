@@ -5,7 +5,7 @@ import patientRouter from "./routes/patients.ts";
 const app = express();
 app.use(express.json());
 
-const PORT = 3000;
+const PORT = 3001;
 
 //get ping api
 app.get("/api/ping", (_req, res) => {
