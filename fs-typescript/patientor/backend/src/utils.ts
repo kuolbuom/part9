@@ -1,79 +1,31 @@
+import { z } from "zod";
 import { Gender, type NewPatient } from "./types.ts";
 
-const isString = (text: unknown): text is string => {
-  return typeof text === "string" || text instanceof String;
-};
-
-const parseName = (name: unknown): string => {
-  if (!name || !isString(name) || name.length === 0) {
-    throw new Error("Incorrect or missing name");
-  }
-
-  return name;
-};
-
-const parseOccupation = (occupation: unknown): string => {
-  if (!occupation || !isString(occupation) || occupation.length === 0) {
-    throw new Error("Incorrect or missing occupation");
-  }
-
-  return occupation;
-};
-
-const parseSsn = (ssn: unknown): string => {
-  if (!ssn || !isString(ssn) || ssn.length === 0) {
-    throw new Error("Incorrect or missing SSN");
-  }
-
-  return ssn;
-};
-
-const isDate = (date: string): boolean => {
-  return Boolean(Date.parse(date));
-};
-
-const parseDate = (date: unknown): string => {
-  if (!date || !isString(date) || !isDate(date)) {
-    throw new Error("Incorrect or missing date: " + date);
-  }
-
-  return date;
-};
-
-const isGender = (param: string): param is Gender => {
-  return (Object.values(Gender) as string[]).includes(param);
-};
-
-const parseGender = (gender: unknown): Gender => {
-  if (!gender || !isString(gender) || !isGender(gender)) {
-    throw new Error("Incorrect or missing gender: " + gender);
-  }
-
-  return gender;
-};
-
 const parseNewPatient = (object: unknown): NewPatient => {
-  if (
-    !object ||
-    typeof object !== "object" ||
-    !("name" in object) ||
-    !("dateOfBirth" in object) ||
-    !("ssn" in object) ||
-    !("gender" in object) ||
-    !("occupation" in object)
-  ) {
+  if (!object || typeof object !== "object") {
     throw new Error("Incorrect or missing data");
   }
 
-  const newPatient: NewPatient = {
-    name: parseName(object.name),
-    dateOfBirth: parseDate(object.dateOfBirth),
-    ssn: parseSsn(object.ssn),
-    gender: parseGender(object.gender),
-    occupation: parseOccupation(object.occupation),
-  };
+  if (
+    "name" in object &&
+    "dateOfBirth" in object &&
+    "ssn" in object &&
+    "gender" in object &&
+    "occupation" in object
+  ) {
+    const newPatient: NewPatient = {
+      //z.string().min(1).parse(""). This will throw an error if the string is empty. The same goes for the other fields.
+      name: z.string().min(1).parse(object.name),
+      dateOfBirth: z.iso.date().parse(object.dateOfBirth),
+      ssn: z.string().min(1).optional().parse(object.ssn),
+      gender: z.enum(Gender).parse(object.gender),
+      occupation: z.string().min(1).parse(object.occupation),
+    };
 
-  return newPatient;
+    return newPatient;
+  }
+
+  throw new Error("Incorrect data: some fields are missing");
 };
 
 export default parseNewPatient;
