@@ -12,7 +12,7 @@ export const Gender = {
 } as const;
 
 //Then create the Gender type:
-// export type Gender = (typeof Gender)[keyof typeof Gender];
+export type Gender = (typeof Gender)[keyof typeof Gender];
 
 export interface Patient {
   id: string;
