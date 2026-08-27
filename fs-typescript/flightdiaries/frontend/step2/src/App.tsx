@@ -63,38 +63,24 @@ const App = () => {
         </div>
 
         <div>
-          <label>
-            Weather:
-            <select
-              value={weather}
-              onChange={(event) => setWeather(event.target.value as Weather)}
-            >
-              <option value="sunny">Sunny</option>
-              <option value="rainy">Rainy</option>
-              <option value="cloudy">Cloudy</option>
-              <option value="stormy">Stormy</option>
-              <option value="windy">Windy</option>
-            </select>
-          </label>
+          Weather:{" "}
+          <input
+            type="text"
+            value={weather}
+            onChange={(event) => setWeather(event.target.value as Weather)}
+          />
         </div>
 
         <div>
-          <label>
-            Visibility:
-            <select
-              value={visibility}
-              onChange={(event) =>
-                setVisibility(event.target.value as Visibility)
-              }
-            >
-              <option value="great">Great</option>
-              <option value="good">Good</option>
-              <option value="ok">OK</option>
-              <option value="poor">Poor</option>
-            </select>
-          </label>
+          Visibility:{" "}
+          <input
+            type="text"
+            value={visibility}
+            onChange={(event) =>
+              setVisibility(event.target.value as Visibility)
+            }
+          />
         </div>
-
         <div>
           <label>
             Comment:
