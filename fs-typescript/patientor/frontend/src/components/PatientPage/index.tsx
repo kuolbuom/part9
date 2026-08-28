@@ -1,10 +1,9 @@
 import { useEffect, useState } from "react";
 import { Alert, Box, CircularProgress, Typography } from "@mui/material";
-import { useParams } from "react-router-dom";
-
 import FemaleIcon from "@mui/icons-material/Female";
 import MaleIcon from "@mui/icons-material/Male";
 import TransgenderIcon from "@mui/icons-material/Transgender";
+import { useParams } from "react-router-dom";
 
 import patientService from "../../services/patients";
 import type { Patient } from "../../types";
@@ -60,9 +59,31 @@ const PatientPage = () => {
         {patient.name}
         <GenderIcon aria-label={patient.gender} fontSize="inherit" />
       </Typography>
-      <Typography>SSN: {patient.ssn}</Typography>
       <Typography>Occupation: {patient.occupation}</Typography>
       <Typography>Date of birth: {patient.dateOfBirth}</Typography>
+      <Typography>SSN: {patient.ssn}</Typography>
+      <Typography variant="h5" sx={{ marginTop: 3 }}>
+        Entries
+      </Typography>
+      {patient.entries.length === 0 ? (
+        <Typography>No entries yet.</Typography>
+      ) : (
+        patient.entries.map((entry) => (
+          <Box key={entry.id} sx={{ marginTop: 2 }}>
+            <Typography>{entry.date}</Typography>
+            <Typography>{entry.description}</Typography>
+            {entry.diagnosisCodes && entry.diagnosisCodes.length > 0 ? (
+              <Box component="ul" sx={{ marginTop: 0 }}>
+                {entry.diagnosisCodes.map((code) => (
+                  <li key={code}>{code}</li>
+                ))}
+              </Box>
+            ) : (
+              <Typography>None</Typography>
+            )}
+          </Box>
+        ))
+      )}
     </Box>
   );
 };
