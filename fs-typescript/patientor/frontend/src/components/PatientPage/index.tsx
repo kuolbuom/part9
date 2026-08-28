@@ -6,9 +6,13 @@ import TransgenderIcon from "@mui/icons-material/Transgender";
 import { useParams } from "react-router-dom";
 
 import patientService from "../../services/patients";
-import type { Patient } from "../../types";
+import type { Diagnosis, Patient } from "../../types";
 
-const PatientPage = () => {
+interface Props {
+  diagnoses: Diagnosis[];
+}
+
+const PatientPage = ({ diagnoses }: Props) => {
   const { id } = useParams<{ id: string }>();
   const [patient, setPatient] = useState<Patient>();
   const [error, setError] = useState<string>();
@@ -60,7 +64,6 @@ const PatientPage = () => {
         <GenderIcon aria-label={patient.gender} fontSize="inherit" />
       </Typography>
       <Typography>Occupation: {patient.occupation}</Typography>
-      <Typography>Date of birth: {patient.dateOfBirth}</Typography>
       <Typography>SSN: {patient.ssn}</Typography>
       <Typography variant="h5" sx={{ marginTop: 3 }}>
         Entries
@@ -70,12 +73,17 @@ const PatientPage = () => {
       ) : (
         patient.entries.map((entry) => (
           <Box key={entry.id} sx={{ marginTop: 2 }}>
-            <Typography>{entry.date}</Typography>
-            <Typography>{entry.description}</Typography>
+            <Typography>
+              {entry.date} {entry.description}
+            </Typography>
             {entry.diagnosisCodes && entry.diagnosisCodes.length > 0 ? (
               <Box component="ul" sx={{ marginTop: 0 }}>
                 {entry.diagnosisCodes.map((code) => (
-                  <li key={code}>{code}</li>
+                  <li key={code}>
+                    {code}:{" "}
+                    {diagnoses.find((diagnosis) => diagnosis.code === code)
+                      ?.name ?? "Unknown diagnosis"}
+                  </li>
                 ))}
               </Box>
             ) : (
