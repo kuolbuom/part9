@@ -5,6 +5,7 @@ import {
   Button,
   CircularProgress,
   Link,
+  MenuItem,
   Stack,
   TextField,
   Typography,
@@ -28,6 +29,8 @@ import type {
 interface Props {
   diagnoses: Diagnosis[];
 }
+
+type EntryType = "HealthCheck" | "OccupationalHealthcare" | "Hospital";
 
 const assertNever = (value: never): never => {
   throw new Error(`Unhandled entry type: ${JSON.stringify(value)}`);
@@ -114,12 +117,18 @@ const PatientPage = ({ diagnoses }: Props) => {
   const [error, setError] = useState<string>();
   const [formError, setFormError] = useState<string>();
   const [showEntryForm, setShowEntryForm] = useState(false);
+  const [entryType, setEntryType] = useState<EntryType>("HealthCheck");
   const [entryForm, setEntryForm] = useState({
     description: "",
     date: "",
     specialist: "",
     diagnosisCodes: "",
     healthCheckRating: "",
+    employerName: "",
+    sickLeaveStartDate: "",
+    sickLeaveEndDate: "",
+    dischargeDate: "",
+    dischargeCriteria: "",
   });
 
   useEffect(() => {
@@ -139,6 +148,23 @@ const PatientPage = ({ diagnoses }: Props) => {
     void fetchPatient();
   }, [id]);
 
+  const resetEntryForm = () => {
+    setEntryType("HealthCheck");
+    setEntryForm({
+      description: "",
+      date: "",
+      specialist: "",
+      diagnosisCodes: "",
+      healthCheckRating: "",
+      employerName: "",
+      sickLeaveStartDate: "",
+      sickLeaveEndDate: "",
+      dischargeDate: "",
+      dischargeCriteria: "",
+    });
+    setFormError(undefined);
+  };
+
   const handleEntrySubmit = async (event: SyntheticEvent<HTMLFormElement>) => {
     event.preventDefault();
 
@@ -146,16 +172,7 @@ const PatientPage = ({ diagnoses }: Props) => {
       return;
     }
 
-    const rating = Number(entryForm.healthCheckRating);
-    if (!Number.isInteger(rating) || rating < 0 || rating > 3) {
-      setFormError("healthCheckRating: Invalid input");
-      return;
-    }
-
-    setFormError(undefined);
-
-    const payload: HealthCheckEntryFormValues = {
-      type: "HealthCheck",
+    const baseEntry = {
       description: entryForm.description,
       date: entryForm.date,
       specialist: entryForm.specialist,
@@ -163,25 +180,73 @@ const PatientPage = ({ diagnoses }: Props) => {
         .split(",")
         .map((code) => code.trim())
         .filter(Boolean),
-      healthCheckRating: rating,
     };
+
+    let payload: Record<string, unknown>;
+
+    if (entryType === "HealthCheck") {
+      const rating = Number(entryForm.healthCheckRating);
+      if (!Number.isInteger(rating) || rating < 0 || rating > 3) {
+        setFormError("healthCheckRating: Invalid input");
+        return;
+      }
+
+      payload = {
+        type: "HealthCheck",
+        ...baseEntry,
+        healthCheckRating: rating,
+      };
+    } else if (entryType === "OccupationalHealthcare") {
+      if (!entryForm.employerName.trim()) {
+        setFormError("employerName: Invalid input");
+        return;
+      }
+
+      const sickLeave =
+        entryForm.sickLeaveStartDate || entryForm.sickLeaveEndDate
+          ? {
+              startDate: entryForm.sickLeaveStartDate,
+              endDate: entryForm.sickLeaveEndDate,
+            }
+          : undefined;
+
+      payload = {
+        type: "OccupationalHealthcare",
+        ...baseEntry,
+        employerName: entryForm.employerName,
+        ...(sickLeave ? { sickLeave } : {}),
+      };
+    } else {
+      if (!entryForm.dischargeDate || !entryForm.dischargeCriteria.trim()) {
+        setFormError("discharge: Invalid input");
+        return;
+      }
+
+      payload = {
+        type: "Hospital",
+        ...baseEntry,
+        discharge: {
+          date: entryForm.dischargeDate,
+          criteria: entryForm.dischargeCriteria,
+        },
+      };
+    }
+
+    setFormError(undefined);
 
     try {
       setError(undefined);
-      const newEntry = await patientService.addEntry(id, payload);
+      const newEntry = await patientService.addEntry(
+        id,
+        payload as HealthCheckEntryFormValues,
+      );
       setPatient((current) =>
         current
           ? { ...current, entries: current.entries.concat(newEntry) }
           : current,
       );
       setShowEntryForm(false);
-      setEntryForm({
-        description: "",
-        date: "",
-        specialist: "",
-        diagnosisCodes: "",
-        healthCheckRating: "",
-      });
+      resetEntryForm();
     } catch (error: unknown) {
       const backendError =
         typeof error === "object" && error !== null && "response" in error
@@ -307,7 +372,7 @@ const PatientPage = ({ diagnoses }: Props) => {
           }}
         >
           <Typography variant="h5" sx={{ marginBottom: 2 }}>
-            New HealthCheck Entry
+            New Entry
           </Typography>
           {formError && (
             <Box
@@ -349,6 +414,18 @@ const PatientPage = ({ diagnoses }: Props) => {
             </Box>
           )}
           <Stack spacing={2}>
+            <TextField
+              select
+              label="Entry type"
+              value={entryType}
+              onChange={({ target }) => setEntryType(target.value as EntryType)}
+            >
+              <MenuItem value="HealthCheck">HealthCheck</MenuItem>
+              <MenuItem value="OccupationalHealthcare">
+                OccupationalHealthcare
+              </MenuItem>
+              <MenuItem value="Hospital">Hospital</MenuItem>
+            </TextField>
             <TextField
               label="Date"
               value={entryForm.date}
@@ -393,36 +470,106 @@ const PatientPage = ({ diagnoses }: Props) => {
                 setFormError(undefined);
               }}
             />
-            <TextField
-              label="Health check rating"
-              type="number"
-              value={entryForm.healthCheckRating}
-              onChange={({ target }) => {
-                const value = target.value;
-                setEntryForm((current) => ({
-                  ...current,
-                  healthCheckRating: value,
-                }));
+            {entryType === "HealthCheck" && (
+              <TextField
+                label="Health check rating"
+                type="number"
+                value={entryForm.healthCheckRating}
+                onChange={({ target }) => {
+                  const value = target.value;
+                  setEntryForm((current) => ({
+                    ...current,
+                    healthCheckRating: value,
+                  }));
 
-                if (value === "") {
-                  setFormError(undefined);
-                  return;
-                }
+                  if (value === "") {
+                    setFormError(undefined);
+                    return;
+                  }
 
-                const numericValue = Number(value);
-                if (
-                  !Number.isInteger(numericValue) ||
-                  numericValue < 0 ||
-                  numericValue > 3
-                ) {
-                  setFormError("healthCheckRating: Invalid input");
-                } else {
-                  setFormError(undefined);
-                }
-              }}
-              slotProps={{ htmlInput: { min: 0, max: 3 } }}
-              required
-            />
+                  const numericValue = Number(value);
+                  if (
+                    !Number.isInteger(numericValue) ||
+                    numericValue < 0 ||
+                    numericValue > 3
+                  ) {
+                    setFormError("healthCheckRating: Invalid input");
+                  } else {
+                    setFormError(undefined);
+                  }
+                }}
+                slotProps={{ htmlInput: { min: 0, max: 3 } }}
+                required
+              />
+            )}
+            {entryType === "OccupationalHealthcare" && (
+              <>
+                <TextField
+                  label="Employer name"
+                  value={entryForm.employerName}
+                  onChange={({ target }) => {
+                    setEntryForm((current) => ({
+                      ...current,
+                      employerName: target.value,
+                    }));
+                    setFormError(undefined);
+                  }}
+                  required
+                />
+                <TextField
+                  label="Sick leave start date"
+                  value={entryForm.sickLeaveStartDate}
+                  onChange={({ target }) => {
+                    setEntryForm((current) => ({
+                      ...current,
+                      sickLeaveStartDate: target.value,
+                    }));
+                    setFormError(undefined);
+                  }}
+                  placeholder="YYYY-MM-DD"
+                />
+                <TextField
+                  label="Sick leave end date"
+                  value={entryForm.sickLeaveEndDate}
+                  onChange={({ target }) => {
+                    setEntryForm((current) => ({
+                      ...current,
+                      sickLeaveEndDate: target.value,
+                    }));
+                    setFormError(undefined);
+                  }}
+                  placeholder="YYYY-MM-DD"
+                />
+              </>
+            )}
+            {entryType === "Hospital" && (
+              <>
+                <TextField
+                  label="Discharge date"
+                  value={entryForm.dischargeDate}
+                  onChange={({ target }) => {
+                    setEntryForm((current) => ({
+                      ...current,
+                      dischargeDate: target.value,
+                    }));
+                    setFormError(undefined);
+                  }}
+                  required
+                />
+                <TextField
+                  label="Discharge criteria"
+                  value={entryForm.dischargeCriteria}
+                  onChange={({ target }) => {
+                    setEntryForm((current) => ({
+                      ...current,
+                      dischargeCriteria: target.value,
+                    }));
+                    setFormError(undefined);
+                  }}
+                  required
+                />
+              </>
+            )}
             <Stack direction="row" spacing={2}>
               <Button type="submit" variant="contained">
                 ADD
@@ -431,7 +578,7 @@ const PatientPage = ({ diagnoses }: Props) => {
                 variant="outlined"
                 onClick={() => {
                   setShowEntryForm(false);
-                  setFormError(undefined);
+                  resetEntryForm();
                 }}
               >
                 Cancel
