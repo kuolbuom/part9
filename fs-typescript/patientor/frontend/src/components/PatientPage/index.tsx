@@ -4,7 +4,6 @@ import {
   Box,
   Button,
   CircularProgress,
-  Link,
   MenuItem,
   Stack,
   TextField,
@@ -16,7 +15,7 @@ import MedicalServicesIcon from "@mui/icons-material/MedicalServices";
 import MonitorHeartIcon from "@mui/icons-material/MonitorHeart";
 import TransgenderIcon from "@mui/icons-material/Transgender";
 import WorkIcon from "@mui/icons-material/Work";
-import { Link as RouterLink, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 
 import patientService from "../../services/patients";
 import type {
@@ -122,7 +121,7 @@ const PatientPage = ({ diagnoses }: Props) => {
     description: "",
     date: "",
     specialist: "",
-    diagnosisCodes: "",
+    diagnosisCodes: [] as string[],
     healthCheckRating: "",
     employerName: "",
     sickLeaveStartDate: "",
@@ -154,7 +153,7 @@ const PatientPage = ({ diagnoses }: Props) => {
       description: "",
       date: "",
       specialist: "",
-      diagnosisCodes: "",
+      diagnosisCodes: [],
       healthCheckRating: "",
       employerName: "",
       sickLeaveStartDate: "",
@@ -176,10 +175,7 @@ const PatientPage = ({ diagnoses }: Props) => {
       description: entryForm.description,
       date: entryForm.date,
       specialist: entryForm.specialist,
-      diagnosisCodes: entryForm.diagnosisCodes
-        .split(",")
-        .map((code) => code.trim())
-        .filter(Boolean),
+      diagnosisCodes: entryForm.diagnosisCodes,
     };
 
     let payload: Record<string, unknown>;
@@ -428,11 +424,13 @@ const PatientPage = ({ diagnoses }: Props) => {
             </TextField>
             <TextField
               label="Date"
+              type="date"
               value={entryForm.date}
               onChange={({ target }) => {
                 setEntryForm((current) => ({ ...current, date: target.value }));
                 setFormError(undefined);
               }}
+              slotProps={{ inputLabel: { shrink: true } }}
               required
             />
             <TextField
@@ -460,20 +458,45 @@ const PatientPage = ({ diagnoses }: Props) => {
               required
             />
             <TextField
-              label="Diagnosis codes (comma separated)"
+              select
+              label="Diagnosis codes"
               value={entryForm.diagnosisCodes}
+              slotProps={{
+                select: {
+                  multiple: true,
+                  displayEmpty: true,
+                  renderValue: (selected) => {
+                    const values = selected as string[];
+                    return values.length > 0 ? values.join(", ") : "";
+                  },
+                },
+              }}
               onChange={({ target }) => {
+                const nextValue =
+                  typeof target.value === "string"
+                    ? target.value
+                        .split(",")
+                        .map((code) => code.trim())
+                        .filter(Boolean)
+                    : (target.value as string[]);
+
                 setEntryForm((current) => ({
                   ...current,
-                  diagnosisCodes: target.value,
+                  diagnosisCodes: nextValue,
                 }));
                 setFormError(undefined);
               }}
-            />
+            >
+              {diagnoses.map((diagnosis) => (
+                <MenuItem key={diagnosis.code} value={diagnosis.code}>
+                  {diagnosis.code}
+                </MenuItem>
+              ))}
+            </TextField>
             {entryType === "HealthCheck" && (
               <TextField
+                select
                 label="Health check rating"
-                type="number"
                 value={entryForm.healthCheckRating}
                 onChange={({ target }) => {
                   const value = target.value;
@@ -482,13 +505,9 @@ const PatientPage = ({ diagnoses }: Props) => {
                     healthCheckRating: value,
                   }));
 
-                  if (value === "") {
-                    setFormError(undefined);
-                    return;
-                  }
-
                   const numericValue = Number(value);
                   if (
+                    value === "" ||
                     !Number.isInteger(numericValue) ||
                     numericValue < 0 ||
                     numericValue > 3
@@ -498,9 +517,14 @@ const PatientPage = ({ diagnoses }: Props) => {
                     setFormError(undefined);
                   }
                 }}
-                slotProps={{ htmlInput: { min: 0, max: 3 } }}
                 required
-              />
+              >
+                <MenuItem value="">Select rating</MenuItem>
+                <MenuItem value={0}>0 - Healthy</MenuItem>
+                <MenuItem value={1}>1 - Low risk</MenuItem>
+                <MenuItem value={2}>2 - High risk</MenuItem>
+                <MenuItem value={3}>3 - Critical risk</MenuItem>
+              </TextField>
             )}
             {entryType === "OccupationalHealthcare" && (
               <>
@@ -518,6 +542,7 @@ const PatientPage = ({ diagnoses }: Props) => {
                 />
                 <TextField
                   label="Sick leave start date"
+                  type="date"
                   value={entryForm.sickLeaveStartDate}
                   onChange={({ target }) => {
                     setEntryForm((current) => ({
@@ -526,10 +551,11 @@ const PatientPage = ({ diagnoses }: Props) => {
                     }));
                     setFormError(undefined);
                   }}
-                  placeholder="YYYY-MM-DD"
+                  slotProps={{ inputLabel: { shrink: true } }}
                 />
                 <TextField
                   label="Sick leave end date"
+                  type="date"
                   value={entryForm.sickLeaveEndDate}
                   onChange={({ target }) => {
                     setEntryForm((current) => ({
@@ -538,7 +564,7 @@ const PatientPage = ({ diagnoses }: Props) => {
                     }));
                     setFormError(undefined);
                   }}
-                  placeholder="YYYY-MM-DD"
+                  slotProps={{ inputLabel: { shrink: true } }}
                 />
               </>
             )}
@@ -546,6 +572,7 @@ const PatientPage = ({ diagnoses }: Props) => {
               <>
                 <TextField
                   label="Discharge date"
+                  type="date"
                   value={entryForm.dischargeDate}
                   onChange={({ target }) => {
                     setEntryForm((current) => ({
@@ -554,6 +581,7 @@ const PatientPage = ({ diagnoses }: Props) => {
                     }));
                     setFormError(undefined);
                   }}
+                  slotProps={{ inputLabel: { shrink: true } }}
                   required
                 />
                 <TextField
@@ -587,14 +615,6 @@ const PatientPage = ({ diagnoses }: Props) => {
           </Stack>
         </Box>
       )}
-
-      <Link
-        component={RouterLink}
-        to="/"
-        sx={{ display: "inline-block", marginTop: 2 }}
-      >
-        Back to patient list
-      </Link>
     </Box>
   );
 };
