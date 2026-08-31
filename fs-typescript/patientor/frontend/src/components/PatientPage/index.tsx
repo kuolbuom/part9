@@ -328,7 +328,9 @@ const PatientPage = ({ diagnoses }: Props) => {
             key={entry.id}
             sx={{
               marginTop: 2,
-              borderTop: "1px solid rgba(0, 0, 0, 0.2)",
+              border: "2px solid rgba(0, 0, 0, 0.2)",
+              borderRadius: 1,
+              padding: 1,
               paddingTop: 1,
             }}
           >
